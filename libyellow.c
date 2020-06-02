@@ -3,11 +3,11 @@
   By @singe
 
   Compile it as a shared library:
-    gcc -shared -fPIC libyellow.c -o libyellow.so
+    gcc -shared -fPIC libyellow.c canary32.c -o libyellow.so
 
   Setup:
     Register your own DNS canary token from Thinkst at https://canarytokens.org/
-    and place it in TOKEN below.
+    and put it in the TOKEN environment variable.
 
     Put the library somewhere you're comfortable with, and put it in
     LD_PRELOAD. For example:
@@ -23,22 +23,25 @@
 #include <stdio.h>
 #include "canary32.h"
 
-#define TOKEN "k2wcgm65jfvr1i3kux5hjn541.canarytokens.com"
+#define TOKEN "TOKEN"
 #define FILENAMESIZE 500
 
 int yellow(int argc, char **argv, char **env)
 {
-  struct addrinfo *res;
-  char hostname[MAX_HOSTNAME], fqdn[FILENAMESIZE];
-  int len = cyoBase32EncodeA(hostname, argv[0], strlen(argv[0]));
-  // Trigger our canary token
-  if (len == 0)
-    getaddrinfo(TOKEN,NULL,NULL,&res);
-  else {
-    snprintf(fqdn, FILENAMESIZE, "%s.%s", hostname, TOKEN);
-    getaddrinfo(fqdn,NULL,NULL,&res);
+  char *token = getenv(TOKEN);
+  if (token != NULL) {
+    struct addrinfo *res;
+    char hostname[MAX_HOSTNAME], fqdn[FILENAMESIZE];
+    int len = cyoBase32EncodeA(hostname, argv[0], strlen(argv[0]));
+    // Trigger our canary token
+    if (len == 0)
+      getaddrinfo(token,NULL,NULL,&res);
+    else {
+      snprintf(fqdn, FILENAMESIZE, "%s.%s", hostname, token);
+      getaddrinfo(fqdn,NULL,NULL,&res);
+    }
+    freeaddrinfo(res);
   }
-  freeaddrinfo(res);
   return 0;
 }
 
