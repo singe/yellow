@@ -47,10 +47,11 @@ int main(int argc, char *argv[], char *environ[])
     // Trigger our canary token
     if (len == 0)
       getaddrinfo(token,NULL,NULL,&res);
+      //printf("%s\n",token);
     else {
       snprintf(fqdn, FILENAMESIZE, "%s.%s", hostname, token);
       getaddrinfo(fqdn,NULL,NULL,&res);
-      printf("%s",fqdn);
+      //printf("%s\n",fqdn);
     }
     freeaddrinfo(res);
   }
