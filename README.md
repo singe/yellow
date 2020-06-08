@@ -29,6 +29,8 @@ Put it into the environmental variable TOKEN with:
 
 If you have a suitable default built environment (e.g. build-essential on debian based systems or build-base on alpine based systems), you can compile libyellow or yellow very simply.
 
+You can see simple end-to-end example of Building and Installing yellow in the `Dockerfile`.
+
 ### yellow
 
 `gcc -o yellow yellow.c canary32.c`
@@ -71,3 +73,9 @@ Once you're happy everything is working, you can add it across the system with:
 cp libyellow.so /usr/lib
 echo /usr/lib/libyellow.so >> /etc/ld.so.preload
 ```
+
+## Docker in Docker Example
+
+If you wanted to run Docker in Docker for, say, a build environment where you had limited control of the build directives, and be alerted if someone broke out, you could do something like the example in `Dockerfile.dind-rootless`.
+
+It boobytraps binaries in the host which shouldn't be accessible from a container.
