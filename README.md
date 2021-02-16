@@ -25,6 +25,8 @@ It will looks something like this: `pz21qtyfsidipvrsuzs9n2udi.canarytokens.com`
 Put it into the environmental variable TOKEN with:
 `export TOKEN="pz21qtyfsidipvrsuzs9n2udi.canarytokens.com"`
 
+The Dockerfiles have an example, working token in them, you can check its activity history [here](https://canarytokens.org/history?token=c28y9l4dw0drj62un0cm4rwz6&auth=4bdd0b79ce575d6b1e2d1c90aec5b5ad). You really should use your own though.
+ 
 ## Building
 
 If you have a suitable default built environment (e.g. build-essential on debian based systems or build-base on alpine based systems), you can compile libyellow or yellow very simply.
@@ -68,7 +70,7 @@ export LD_PRELOAD=/usr/lib/libyellow.so
 ```
 Then run any binary, check that it behaves as expected, and you get a canary alert.
 
-Once you're happy everything is working, you can add it across the system with:
+Once you're happy everything is working, you can add it across the system with (this won't work on musl based systems like alpine):
 ```
 cp libyellow.so /usr/lib
 echo /usr/lib/libyellow.so >> /etc/ld.so.preload
@@ -79,3 +81,7 @@ echo /usr/lib/libyellow.so >> /etc/ld.so.preload
 If you wanted to run Docker in Docker for, say, a build environment where you had limited control of the build directives, and be alerted if someone broke out, you could do something like the example in `Dockerfile.dind-rootless`.
 
 It boobytraps binaries in the host which shouldn't be accessible from a container.
+
+## Other Docker examples
+
+There are several Dockerfiles showing how yellow or libyellow could be built and used.

@@ -15,3 +15,6 @@ COPY --from=builder /yellow /bin/
 
 RUN mv /usr/bin/id /usr/bin/id.canary \
   && ln -s /bin/yellow /usr/bin/id
+
+# Replace this with your token form https://canarytokens.org/
+ENV TOKEN c28y9l4dw0drj62un0cm4rwz6.canarytokens.com

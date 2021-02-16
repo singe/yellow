@@ -5,22 +5,17 @@ RUN apk update && apk --no-cache add \
     build-base \
   && rm -rf /var/cache/apk/*
 WORKDIR /
-COPY yellow.c canary32.c canary32.h /
-RUN gcc -o yellow yellow.c canary32.c
+COPY libyellow.c canary32.c canary32.h /
+RUN gcc -shared -fPIC libyellow.c canary32.c -o libyellow.so
 
-From docker:dind-rootless
+From alpine:latest
 LABEL maintainer="@singe at SensePost <research@sensepost.com>"
 
-USER root
+COPY --from=builder /libyellow.so /usr/lib/
 
-COPY --from=builder /yellow /bin/
-
-RUN mv /usr/bin/id /usr/bin/id.canary \
-  && ln -s /bin/yellow /usr/bin/id
-RUN mv /usr/bin/nc /usr/bin/nc.canary \
-  && ln -s /bin/yellow /usr/bin/nc
+# alpine doesn't support /etc/ld.so.preload, use LD_PRELOAD instead
+#RUN echo /usr/lib/libyellow.so >> /etc/ld.so.preload
+ENV LD_PRELOAD=/usr/lib/libyellow.so
 
 # Replace this with your token form https://canarytokens.org/
 ENV TOKEN c28y9l4dw0drj62un0cm4rwz6.canarytokens.com
-
-USER rootless

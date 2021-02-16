@@ -1,0 +1,28 @@
+FROM debian:sid-slim as builder
+LABEL maintainer="@singe at SensePost <research@sensepost.com>"
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt install -y \
+  gcc \
+  libc-dev
+RUN rm -rf /var/cache/apk/*
+
+WORKDIR /
+COPY libyellow.c yellow.c canary32.c canary32.h /
+RUN gcc -o yellow yellow.c canary32.c
+RUN gcc -shared -fPIC libyellow.c canary32.c -o libyellow.so
+
+FROM debian:sid-slim
+LABEL maintainer="@singe at SensePost <research@sensepost.com>"
+
+COPY --from=builder /yellow /bin/
+COPY --from=builder /libyellow.so /usr/lib/
+
+RUN mv /usr/bin/id /usr/bin/id.canary \
+  && ln -s /bin/yellow /usr/bin/id
+
+RUN echo /usr/lib/libyellow.so >> /etc/ld.so.preload
+ENV LD_PRELOAD=/usr/lib/libyellow.so
+
+# Replace this with your token form https://canarytokens.org/
+ENV TOKEN c28y9l4dw0drj62un0cm4rwz6.canarytokens.com
