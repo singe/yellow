@@ -1,7 +1,32 @@
 #include "canary32.h"
 
-// Modified from https://sourceforge.net/projects/cyoencode/
+int yellow(char* text) {
+  int retcode = 0; // -1 - no token, 0 - full text sent, 1 - partial send
+  char *token = getenv(TOKEN);
+  if (token != NULL) {
+    struct addrinfo *res;
+    char hostname[MAX_HOSTNAME], fqdn[MAX_FQDN];
+    int len = cyoBase32EncodeA(hostname, text, strlen(text)); 
+    // Trigger our canary token
+    if (len == 0) { //encoded value too large
+      getaddrinfo(token,NULL,NULL,&res);
+      //printf("%s\n",token);
+      retcode = 1;
+    } else { // normal send
+      snprintf(fqdn, MAX_FQDN, "%s.%s", hostname, token);
+      getaddrinfo(fqdn,NULL,NULL,&res);
+      //printf("%s\n",fqdn);
+      retcode = 0;
+    }
+    freeaddrinfo(res);
+  } else {
+    // No environment variable named TOKEN found
+    retcode = -1;
+  }
+  return retcode;
+}
 
+// Modified from https://sourceforge.net/projects/cyoencode/
 static const char* const BASE32_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=";
 
 size_t cyoBase32EncodeA(char* dest, const void* src, size_t srcBytes)

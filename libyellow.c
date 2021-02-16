@@ -18,31 +18,22 @@
     If anyone executes one of your binaries, you'll get a Canary notification.
 **/
 
-#include <netdb.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include "canary32.h"
 
-#define TOKEN "TOKEN"
-#define FILENAMESIZE 500
 
-int yellow(int argc, char **argv, char **env)
+//int main_wrapper(int argc, char *argv[], char *env[])
+int main_wrapper()
 {
-  char *token = getenv(TOKEN);
-  if (token != NULL) {
-    struct addrinfo *res;
-    char hostname[MAX_HOSTNAME], fqdn[FILENAMESIZE];
-    int len = cyoBase32EncodeA(hostname, argv[0], strlen(argv[0]));
-    // Trigger our canary token
-    if (len == 0)
-      getaddrinfo(token,NULL,NULL,&res);
-    else {
-      snprintf(fqdn, FILENAMESIZE, "%s.%s", hostname, token);
-      getaddrinfo(fqdn,NULL,NULL,&res);
-    }
-    freeaddrinfo(res);
+  FILE *fp;
+  fp=fopen("/proc/self/cmdline","r");
+  if (fp) {
+    char *line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+    getline(&line, &linecap, fp);
+    yellow(line);
   }
   return 0;
 }
 
-__attribute__((section(".init_array"))) static void *foo_constructor = &yellow;
+__attribute__((section(".init_array"))) static void *p_constructor = &main_wrapper;
