@@ -1,0 +1,30 @@
+FROM debian:sid-slim as builder
+LABEL maintainer="@singe at SensePost <research@sensepost.com>"
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN grep ^deb\  /etc/apt/sources.list | sed "s/^deb\ /deb-src\ /" >> /etc/apt/sources.list
+RUN apt update \
+  && apt build-dep -y libc6 \
+  && apt-get source libc6
+RUN mkdir glibcbuild \
+  && cd glibcbuild \
+  && ../glibc-*/configure --disable-sanity-checks --libdir=$(dirname $(find / -name "libc.so.6"|grep 64)) \
+  && make 
+COPY rtld_canary.c rtld.c.patch /
+RUN cd ../glibc-*/elf \
+  && mv /rtld* . \
+  && patch < rtld.c.patch \
+  && cd ../../glibcbuild \
+  && make \
+  && cd ..
+
+FROM debian:sid-slim
+LABEL maintainer="@singe at SensePost <research@sensepost.com>"
+
+COPY --from=builder /glibcbuild/elf/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.3
+
+RUN sed -i "s/\/lib64\/ld-linux-x86-64.so.2/\/lib64\/ld-linux-x86-64.so.3/" /bin/cat
+
+ENV TOKEN k2wcgm65jfvr1i3kux5hjn541.canarytokens.com
+
+CMD [ "/bin/bash" ]

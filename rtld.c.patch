@@ -1,0 +1,18 @@
+--- glibc-2.31/elf/rtld.c	2021-03-26 11:10:58.000000000 +0000
++++ glibc-2.31-yellow/elf/rtld.c	2021-03-26 11:12:20.318214000 +0000
+@@ -48,6 +48,7 @@
+ #include <array_length.h>
+ 
+ #include <assert.h>
++#include <rtld_canary.c>
+ 
+ /* Only enables rtld profiling for architectures which provides non generic
+    hp-timing support.  The generic support requires either syscall
+@@ -1139,6 +1140,7 @@
+   struct audit_list audit_list;
+   audit_list_init (&audit_list);
+ 
++  rtld_canary(rtld_progname);
+   GL(dl_init_static_tls) = &_dl_nothread_init_static_tls;
+ 
+ #if defined SHARED && defined _LIBC_REENTRANT \
