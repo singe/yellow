@@ -25,6 +25,6 @@ COPY --from=builder /glibcbuild/elf/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.
 
 RUN sed -i "s/\/lib64\/ld-linux-x86-64.so.2/\/lib64\/ld-linux-x86-64.so.3/" /bin/cat
 
-ENV TOKEN k2wcgm65jfvr1i3kux5hjn541.canarytokens.com
+ENV TOKEN c28y9l4dw0drj62un0cm4rwz6.canarytokens.com
 
 CMD [ "/bin/bash" ]
