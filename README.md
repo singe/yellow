@@ -10,11 +10,15 @@
 
 # yellow - just add blue
 
-A simple binary wrapper that will trigger a [canarytoken](https://canarytokens.org/") when a binary is executed.
+Simple binary modifications that will trigger a [canarytoken](https://canarytokens.org/") when a binary is executed.
 
-Ideal for boobytrapping production systems.
+Ideal for boobytrapping production systems against attackers.
 
-Currently there are two methods, yellow is a targetted approach with a binary that will trigger the token then execute the real binary based on a file extension of your choosing. libyellow is a cross-system notification and will transparently trigger a canarytoken for any binary name you specify when it's injected via LD_PRELOAD.
+Currently there are three methods:
+
+* yellow is a targetted approach with a binary that will trigger the token then execute the real binary based on a file extension of your choosing. 
+* libyellow is a cross-system notification and will transparently trigger a canarytoken for any binary name you specify when it's injected via LD_PRELOAD
+* ldsoyellow is a fully functional glibc linker (ld.so) that will trigger a canarytoken for any binary that uses it
 
 ## Pre-work
 
@@ -29,13 +33,17 @@ The Dockerfiles have an example, working token in them, you can check its activi
  
 ## Building
 
-If you have a suitable default built environment (e.g. build-essential on debian based systems or build-base on alpine based systems), you can compile libyellow or yellow very simply.
+Dockerfiles implementing each of these build methods are available.
 
-You can see simple end-to-end example of Building and Installing yellow in the `Dockerfile`.
+If you have a suitable default build environment (e.g. build-essential on debian based systems or build-base on alpine based systems), you can compile libyellow or yellow very simply. ldsoyellow is more involved.
+
+You can see simple end-to-end example of Building and Installing yellow in the `Dockerfile`s.
 
 ### yellow
 
 `gcc -o yellow yellow.c canary32.c`
+
+See `Dockerfile.yellow`
 
 ### libyellow
 
@@ -43,7 +51,31 @@ Make sure to update the list of binary's you want to alert on in the alert_list 
 
 `gcc -shared -fPIC libyellow.c canary32.c -o libyellow.so`
 
+See `Dockerfile.libyellow` or `Dockerfile.libyellow.debian` for Alpine and Debian versions.
+
+### ldsoyellow
+
+Check the `Dockerfile.ldsoyellow` for a working example. You'll need the glibc sources (I recommend using the official package version to be as close to the real linker as possible).
+
+`apt-get source libc6`
+
+Apply the patch `rtld.c.patch`
+
+`cd /glibc-*`
+`patch < rtld.c.patch`
+
+Configure glibc with sanity checks disabled and pointing to the right libdir (assuming 64bit system)
+
+`mkdir glibcbuild && cd glibcbuild`
+`/glibc-*/configure --disable-sanity-checks --libdir=$(dirname $(find / -name "libc.so.6"|grep 64))`
+
+Build as normal
+
+`make`
+
 ## Installing
+
+All variants use the TOKEN environment variable to specify the canary token URL. The environment variable name can be changed, or even hardcoded if you prefer. Again, Dockerfiles exist for each of these.
 
 ### yellow
 
@@ -56,6 +88,8 @@ ln -s /usr/bin/yellow /usr/bin/id
 ```
 
 After this any execution of `id` will trigger your canary token.
+
+See `Dockerfile.yellow`
 
 ### libyellow
 
@@ -70,18 +104,30 @@ export LD_PRELOAD=/usr/lib/libyellow.so
 ```
 Then run a target binary, check that it behaves as expected, and you get a canary alert.
 
-Once you're happy everything is working, you can add it across the system with (this won't work on musl based systems like alpine):
+Once you're happy everything is working, you can add it across the system with (this won't work on musl based systems like alpine, where the LD_PRELOAD method is used instead):
 ```
 cp libyellow.so /usr/lib
 echo /usr/lib/libyellow.so >> /etc/ld.so.preload
 ```
 
+See `Dockerfile.libyellow` or `Dockerfile.libyellow.debian` for Alpine and Debian versions.
+
+### ldsoyellow
+
+ldsoyellow is intended to trigger on specific binaries where the binary is modified to use it instead of the default linker. You could replace the default linker with it for a system wide effect, but that would likely be too noisy.
+
+The `Dockerfile.ldsoyellow` example includes doing this for `/bin/cat`. First the arm'ed linker is copied next to the legitemate linker:
+
+`cp <arm'd linker> /lib64/ld-linux-x86-64.so.3`
+
+Then the binary is modified to use it instead of the legitemate one:
+
+`sed -i "s/\/lib64\/ld-linux-x86-64.so.2/\/lib64\/ld-linux-x86-64.so.3/" /bin/cat`
+
+See `Dockerfile.ldsoyellow`.
+
 ## Docker in Docker Example
 
-If you wanted to run Docker in Docker for, say, a build environment where you had limited control of the build directives, and be alerted if someone broke out, you could do something like the example in `Dockerfile.dind-rootless`.
+If you wanted to run Docker in Docker for, say, a build environment where you had limited control of the build directives, and be alerted if someone broke out, you could do something like the example in `Dockerfile.dind-rootless`. This example uses `yellow` but could use any or all the other variants.
 
 It boobytraps binaries in the host which shouldn't be accessible from a container.
-
-## Other Docker examples
-
-There are several Dockerfiles showing how yellow or libyellow could be built and used.
