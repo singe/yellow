@@ -14,9 +14,10 @@ Simple binary modifications that will trigger a [canarytoken](https://canarytoke
 
 Ideal for boobytrapping production systems against attackers.
 
-Currently there are three methods:
+Currently there are four methods:
 
 * yellow is a targetted approach with a binary that will trigger the token then execute the real binary based on a file extension of your choosing. 
+* spe is a variation on the above using a similar approach to Thinkst's recently added ["Sensitive Process Execution"](https://blog.thinkst.com/2022/09/sensitive-command-token-so-much-offense.html) token for Windows.
 * libyellow is a cross-system notification and will transparently trigger a canarytoken for any binary name you specify when it's injected via LD_PRELOAD
 * ldsoyellow is a fully functional glibc linker (ld.so) that will trigger a canarytoken for any binary that uses it
 
@@ -44,6 +45,10 @@ You can see simple end-to-end example of Building and Installing yellow in the `
 `gcc -o yellow yellow.c canary32.c`
 
 See `Dockerfile.yellow`
+
+### spe
+
+No building required.
 
 ### libyellow
 
@@ -90,6 +95,12 @@ ln -s /usr/bin/yellow /usr/bin/id
 After this any execution of `id` will trigger your canary token.
 
 See `Dockerfile.yellow`
+
+## spe
+
+The sensitive process execution method uses the same technique as above, except it triggers with a shell script rather than a binary, and comes with an installer. Run `spe_install.sh` passing it your DNS token and name of the binary you want to trigger on. The binary doesn't need to exist.
+
+This is a copy of the Windows token method described [here](https://blog.thinkst.com/2022/09/sensitive-command-token-so-much-offense.html)
 
 ### libyellow
 
