@@ -100,6 +100,11 @@ See `Dockerfile.yellow`
 
 The sensitive process execution method uses the same technique as above, except it triggers with a shell script rather than a binary, and comes with an installer. Run `spe_install.sh` passing it your DNS token and name of the binary you want to trigger on. The binary doesn't need to exist.
 
+For example:
+`./spe_install.sh "c28y9l4dw0drj62un0cm4rwz6.canarytokens.com" /bin/id`
+
+Will create an alert any time `id` is run.
+
 This is a copy of the Windows token method described [here](https://blog.thinkst.com/2022/09/sensitive-command-token-so-much-offense.html)
 
 ### libyellow

